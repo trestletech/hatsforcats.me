@@ -1,6 +1,16 @@
 ---
-title: "HatsForCats.me - Last Week's Sales"
+title: "HatsForCats.me - Recent Sales"
 output: html_document
+params: 
+  days: 
+    label: "# of Recent Days to include"
+    value: 7
+    min: 0
+  productID:
+    label: "Product ID to include"
+    value: All
+    input: select
+    choices: [All, 1, 2, 3, 4]
 ---
 
 ```{r setup, include=FALSE}
@@ -9,19 +19,29 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r, warning=FALSE, echo=FALSE, message=FALSE}
 library(lubridate)
+library(dplyr)
 
-# Dynamically compute the previous week's boundaries.
-dow <- lubridate::wday(Sys.Date())
-end <- Sys.Date() - dow
-start <- end - 6
+# Dynamically compute the given boundaries
+end <- Sys.Date()
+start <- end - params$days
 
-rangeStr <- paste0(month(start, label=TRUE), " ", day(start), "-", month(end, label=TRUE), " ", day(end))
+productStr <- "All products"
+if (params$productID != "All") {
+  productStr <- paste0("Product #", params$productID)
+}
+rangeStr <- paste0(month(start, label=TRUE), " ", day(start), "-", month(end, label=TRUE), " ", day(end), ", ", productStr)
+
 sales <- readRDS("sales.rds")
+
+if (params$productID != "All"){
+  sales <- sales %>% 
+    filter(Product == params$productID)
+}
 ```
 
 ## Sales for `r rangeStr`
 
-Below is the weekly revenue for `r rangeStr`. 
+Below is the recent sales history for `r rangeStr`. 
 
 ```{r, message=FALSE, echo=FALSE}
 library(ggplot2)
@@ -41,7 +61,9 @@ ggplot(sales_by_day, aes(Date, n)) + geom_line() + geom_point() +
   ylab("Total Daily Sales") + ggtitle("Sales Last Week By Day") +
   ggplot2::geom_hline(yintercept = 0)
 
-ggplot(lw_sales, aes(Product)) + geom_histogram(stat="count") + xlab("Product ID") + ylab("Sales") + ggtitle("Sales by Product Last Week")
+if (params$productID == "All") {
+  ggplot(lw_sales, aes(Product)) + geom_histogram(stat="count") + xlab("Product ID") + ylab("Sales") + ggtitle("Sales by Product Last Week")
+}
 ```
 
 ```{r, warning=FALSE, message=FALSE, echo=FALSE}

@@ -21,7 +21,7 @@ sales <- readRDS("sales.rds")
 
 ## Sales for `r rangeStr`
 
-Below is the weekly revenue for `r rangeStr`. 
+Below is last week's sales history for `r rangeStr`. 
 
 ```{r, message=FALSE, echo=FALSE}
 library(ggplot2)

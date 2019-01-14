@@ -3,8 +3,8 @@
 #* @apiDescription Query the sales history by day or region
 #* @apiTag sales Functionality having to do with sales history
 
-sales <- readRDS("sales.rds") %>% select(-latitude, -longitude)
 library(dplyr)
+sales <- readRDS("sales.rds") %>% select(-latitude, -longitude)
 
 #* @get /sales/daily/
 #* @tag sales
