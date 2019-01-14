@@ -1,0 +1,88 @@
+---
+title: "Make Sales"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Generate Sales
+
+```{r}
+set.seed(54321)
+library(zipcode)
+data(zipcode)
+
+product_ids <- 1:4
+
+avg_daily_start <- 300
+avg_daily_end <- 20
+sd <- 30
+
+start <- as.Date("2016-04-01")
+end <- as.Date("2019-01-17")
+
+days <- seq(from=start, to=end, by=1)
+sales <- data.frame(Date=as.Date(x = integer(0), origin = "1970-01-01"), Zip=character(0), Product=integer(0), stringsAsFactors = FALSE)
+
+for (i in 1:length(days)) {
+  d <- days[i]
+  
+  ratio <- (length(days)-i)/length(days)
+  avg_daily <-  ratio * (avg_daily_start - avg_daily_end) + avg_daily_end
+  
+  day_sales <- rnorm(1, avg_daily, sd)
+  if (day_sales < 1) {
+    day_sales <- 1
+  }
+  day_sales <- round(day_sales)
+  
+  zips <- sample(zipcode$zip, day_sales, replace=TRUE)
+  
+  sales_by_zip <- table(zips)
+  
+  todays <- data.frame(
+    Date=rep(as.Date(d, origin="1970-01-01"), times=length(sales_by_zip)),
+    Zip = names(sales_by_zip),
+    Product = round(runif(length(sales_by_zip) + 0.2, min(product_ids), max(product_ids))), #Intentionally under-representing the first and last number to add some variance.
+    stringsAsFactors = FALSE)
+  
+  sales <- rbind(sales, todays)
+}
+
+library(tibble)
+library(dplyr)
+
+sales <- as_tibble(sales)
+sales$Date <- as.Date(sales$Date, origin="1970-01-01")
+sales$ID <- 1:nrow(sales)
+
+sales <- sales %>% select(ID, Date, Zip, Product) %>% mutate(Product = as.factor(Product))
+
+sales
+```
+
+```{r}
+library(ggplot2)
+library(dplyr)
+sales_by_day <- sales %>% 
+  group_by(Date) %>% 
+  tally()
+
+ggplot(sales_by_day, aes(Date, n)) + geom_line()
+```
+
+```{r}
+sales_loc <- left_join(sales, zipcode, by=c(Zip="zip"))
+
+library(leaflet)
+leaflet(sales_loc) %>% addTiles() %>% addMarkers(
+  clusterOptions = markerClusterOptions()
+)
+
+saveRDS(sales_loc, "sales.rds", compress = FALSE)
+```
+
