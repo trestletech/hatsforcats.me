@@ -5,3 +5,5 @@
 *.html
 rsconnect/
 notes.txt
+**.DS_Store
+cvp/ve
