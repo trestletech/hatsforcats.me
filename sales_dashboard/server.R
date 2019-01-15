@@ -5,9 +5,9 @@ library(dplyr)
 library(lubridate)
 library(shinydashboard)
 
-all_sales <- readRDS("../sales.rds")
+all_sales <- readRDS("sales.rds")
 
-cash <- readRDS("../cash.rds")
+cash <- readRDS("cash.rds")
 
 raise <- as.Date("2017-01-01")
 

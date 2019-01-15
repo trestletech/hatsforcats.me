@@ -94,12 +94,12 @@ sera_date <- as.Date("2017-01-01")
 set.seed(1234)
 # Pre-series A
 daily_burn <- 300
-burned <- c(-100000, rnorm(as.integer(sera_date - start)+2, daily_burn, 1500))
+burned <- c(-100000, rnorm(as.integer(sera_date - start)-1, daily_burn, 1500))
 
 # Series A, 1mm
 burned <- c(burned, -1000000)
 daily_burn <- 1750
-burned <- c(burned, rnorm(as.integer(end - sera_date)+2, daily_burn, 10000))
+burned <- c(burned, rnorm(as.integer(end - sera_date), daily_burn, 10000))
 
 coh <- cumsum(-burned)
 plot(coh, ylim=c(0,1000000), type="b")
@@ -107,4 +107,11 @@ abline(h=0)
 
 cash <- data.frame(Date = days, Cash = coh)
 saveRDS(cash, "cash.rds", compress=FALSE)
+```
+
+Then resave for Shiny
+```{r}
+# Cheat to make deployment easier
+saveRDS(sales, "sales_dashboard/sales.rds")
+saveRDS(cash, "sales_dashboard/cash.rds")
 ```
