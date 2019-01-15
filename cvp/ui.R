@@ -15,14 +15,16 @@ shinyUI(fluidPage(
     sidebarLayout(
         sidebarPanel(
             div(
-                tags$video(id="video"),
-                tags$button(id="startbutton", "Take Photo"),
-                class="camera"),
-            tags$canvas(id="canvas"),
-            div(
-                tags$img(id="photo"), 
-                class="output"
-            )
+                id="webcaminput",
+                div(
+                    tags$video(id="video"),
+                    tags$button(id="startbutton", "Take Photo"),
+                    class="camera"),
+                tags$canvas(id="canvas")
+            ),
+            selectInput("hat", "Hat Type: ", 
+                        choices=c("Cowboy", "Santa", "Party", "Wizard"),
+                        selected="Cowboy")
         ),
 
         mainPanel(

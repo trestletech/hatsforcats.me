@@ -5,11 +5,11 @@ import common #some useful opencv functions
 #import video # some video stuff
 import numpy as np # matrix manipulations
 
-def find_faces(file):
+def find_faces(file, hat_file):
   face_image = cv2.imread(file)
   grey = cv2.cvtColor(face_image, cv2.COLOR_BGR2GRAY)
 
-  hat = cv2.imread("hat.png", -1)
+  hat = cv2.imread(hat_file, -1)
 
   face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
   faces = face_cascade.detectMultiScale(grey, 1.3, 5)
