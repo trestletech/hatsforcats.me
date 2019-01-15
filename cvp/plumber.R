@@ -19,8 +19,6 @@ source_python("helper.py")
 
 #* @post /addhat
 function(){
-  
-  source_python("helper.py") #FIXME: remove
   img <- find_faces("test.jpg")
   
   img <- img/255
