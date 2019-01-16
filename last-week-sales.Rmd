@@ -1,6 +1,10 @@
 ---
 title: "HatsForCats.me - Last Week's Sales"
 output: html_document
+rmd_output_metadata:
+  rsc_email_suppress_report_attachment: true
+  rsc_email_attachments:
+    - "sales.xlsx"
 ---
 
 ```{r setup, include=FALSE}
@@ -9,6 +13,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r, warning=FALSE, echo=FALSE, message=FALSE}
 library(lubridate)
+library(openxlsx)
+library(blastula)
+library(formattable)
 start <- as.Date("2019-01-06")
 end <- as.Date("2019-01-12")
 rangeStr <- paste0(month(start, label=TRUE), " ", day(start), "-", month(end, label=TRUE), " ", day(end))
@@ -32,12 +39,63 @@ sales_by_day <- lw_sales %>%
   group_by(Date) %>% 
   tally()
   
-ggplot(sales_by_day, aes(Date, n)) + geom_line() + geom_point() + 
+sales_plot <- ggplot(sales_by_day, aes(Date, n)) + geom_line() + geom_point() + 
   ylim(0, max(sales_by_day$n)) +
   ylab("Total Daily Sales") + ggtitle("Sales Last Week By Day") +
   ggplot2::geom_hline(yintercept = 0)
 
-ggplot(lw_sales, aes(Product)) + geom_histogram(stat="count") + xlab("Product ID") + ylab("Sales") + ggtitle("Sales by Product Last Week")
+sales_plot
+
+product_plot <- ggplot(lw_sales, aes(Product)) + geom_histogram(stat="count") + xlab("Product ID") + ylab("Sales") + ggtitle("Sales by Product Last Week")
+
+product_plot
+```
+
+```{r customizeEmail}
+subject <- paste0("Summary of ", nrow(lw_sales), " sales last week")
+rmarkdown::output_metadata$set(rsc_email_subject = subject)
+
+# Write to XLSX file
+openxlsx::write.xlsx(lw_sales, "sales.xlsx", colNames=TRUE)
+
+products <- data.frame(ProductID = 1:4, Product = c("Cowboy", "Wizard", "Santa", "Party"), stringsAsFactors = TRUE)
+
+table <- lw_sales %>% group_by(Product) %>% 
+  tally() %>% mutate(ProductID=as.integer(Product)) %>% 
+  select(ProductID, Sales=n) %>% 
+  left_join(products) %>% 
+  select(Product, Sales)
+
+formatted_table <- format_table(
+  x=table,
+  list(
+    ProductID = formatter("span"),
+    area(col = c(Sales)) ~ color_bar("pink")
+  )
+)
+
+# Create the Blastula email object.
+message <- compose_email(
+    body = "
+All,
+
+Please find the summary of last week's sales below. The data is also attached as an Excel spreadsheet for your perusal.
+
+{add_ggplot(plot_object = sales_plot, width = 5, height = 5)}
+
+{add_ggplot(plot_object = product_plot, width = 5, height = 5)}
+
+{formatted_table}
+
+Best,
+
+HatsForCats Data Science Team
+  "
+)
+
+# Use Blastula's message as the email body in RStudio Connect.
+rmarkdown::output_metadata$set(rsc_email_body_html = message$html_str)
+rmarkdown::output_metadata$set(rsc_email_images = message$images)
 ```
 
 ```{r, warning=FALSE, message=FALSE}

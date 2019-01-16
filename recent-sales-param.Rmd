@@ -6,11 +6,11 @@ params:
     label: "# of Recent Days to include"
     value: 7
     min: 0
-  productID:
-    label: "Product ID to include"
+  product:
+    label: "Product to include"
     value: All
     input: select
-    choices: [All, 1, 2, 3, 4]
+    choices: [All, Cowboy, Wizard, Santa, Party]
 ---
 
 ```{r setup, include=FALSE}
@@ -18,6 +18,13 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r, warning=FALSE, echo=FALSE, message=FALSE}
+productID <- switch(params$product,
+                    All = "All",
+                    Cowboy = 1,
+                    Wizard = 2,
+                    Santa = 3,
+                    Party = 4)
+
 library(lubridate)
 library(dplyr)
 
@@ -26,16 +33,16 @@ end <- Sys.Date()
 start <- end - params$days
 
 productStr <- "All products"
-if (params$productID != "All") {
-  productStr <- paste0("Product #", params$productID)
+if (productID != "All") {
+  productStr <- paste0("Product #", productID)
 }
 rangeStr <- paste0(month(start, label=TRUE), " ", day(start), "-", month(end, label=TRUE), " ", day(end), ", ", productStr)
 
 sales <- readRDS("sales.rds")
 
-if (params$productID != "All"){
+if (productID != "All"){
   sales <- sales %>% 
-    filter(Product == params$productID)
+    filter(Product == productID)
 }
 ```
 
@@ -61,7 +68,7 @@ ggplot(sales_by_day, aes(Date, n)) + geom_line() + geom_point() +
   ylab("Total Daily Sales") + ggtitle("Sales Last Week By Day") +
   ggplot2::geom_hline(yintercept = 0)
 
-if (params$productID == "All") {
+if (productID == "All") {
   ggplot(lw_sales, aes(Product)) + geom_histogram(stat="count") + xlab("Product ID") + ylab("Sales") + ggtitle("Sales by Product Last Week")
 }
 ```
